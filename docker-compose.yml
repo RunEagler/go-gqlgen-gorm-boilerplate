@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  postgres:
+    container_name: postgres
+    build:
+        context: .
+        dockerfile: ./docker/postgres/Dockerfile
+    ports:
+      - 5432:5432
+    volumes:
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+      - ./db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DATBASE: skilldb
+    hostname: postgres
+    user: root
+  app:
+    container_name: app-graphql-api
+    depends_on:
+      - postgres
+    build:
+      context: .
+      dockerfile: docker/golang/Dockerfile
+    environment:
+      - GOPATH=/go
+      - POSTGRESQL_URL=postgres://postgres:root@postgres:5432/skilldb?sslmode=disable
+    volumes:
+      - ./:/go/src/app
+    ports:
+      - 8080:8080
+      - 2345:2345
+    command: go run server.go
+
